@@ -1,10 +1,7 @@
-import PostEntity from "./Post";
-import UserEntity from "./User";
-
-export default interface TagEntity {
+export interface TagEntity {
   id: string;
-  posts?: PostEntity[];
-  followers?: UserEntity[];
+  posts: number;
+  followers: number;
   name: string;
   color: string;
   createdAt: Date;

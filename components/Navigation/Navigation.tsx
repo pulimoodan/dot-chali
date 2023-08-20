@@ -165,7 +165,13 @@ function Navigation({ user }: Props) {
             </Layout.Section>
 
             <Layout.Section>
-              <Button fullWidth primary icon={ComposeMajor} size="large">
+              <Button
+                fullWidth
+                primary
+                icon={ComposeMajor}
+                size="large"
+                url="/create"
+              >
                 Create
               </Button>
             </Layout.Section>

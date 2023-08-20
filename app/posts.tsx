@@ -1,6 +1,7 @@
 "use server";
 import prisma from "@/lib/db";
 import { BigPostEntity } from "@/lib/entities/Post";
+import { TagEntity } from "@/lib/entities/Tag";
 import { VoteType } from "@/lib/entities/Vote";
 
 export async function loadPostsForUser(currentUserId: string) {
@@ -25,6 +26,7 @@ export async function loadPostsForUser(currentUserId: string) {
     INNER JOIN "_PostToTag" ON "Post"."id" = "_PostToTag"."A"
     INNER JOIN "Tag" ON "Tag"."id" = "_PostToTag"."B"
     GROUP BY "Post"."id", "User"."id"
+    ORDER BY "Post"."createdAt" DESC
   `;
   return rawPosts;
 }
@@ -54,6 +56,21 @@ export async function loadPostForUser(postId: string, currentUserId: string) {
     GROUP BY "Post"."id", "User"."id"
   `;
   return rawPosts[0];
+}
+
+export async function loadTags() {
+  const rawTags = await prisma.$queryRaw<TagEntity[]>`
+    SELECT 
+    "Tag"."id",
+    "Tag"."name",
+    "Tag"."color",
+    "Tag"."createdAt",
+    "Tag"."updatedAt",
+    (SELECT COUNT(*) FROM "Post" JOIN "_PostToTag" ON "_PostToTag"."A" = "Post"."id" AND "Tag"."id" = "_PostToTag"."B") AS posts,
+    (SELECT COUNT(*) FROM "User" JOIN "_TagToUser" ON "_TagToUser"."A" = "Tag"."id" AND "User"."id" = "_TagToUser"."B") AS followers
+    FROM "Tag"
+  `;
+  return rawTags;
 }
 
 export async function loadCommentsForPost(postId: string) {
@@ -125,6 +142,29 @@ export async function commentPost(
     },
   });
   return comment;
+}
+
+export async function createPost(
+  content: string,
+  tags: string[],
+  userId: string
+) {
+  await prisma.post.create({
+    data: {
+      content,
+      tags: {
+        connect: tags.map((id) => {
+          return { id };
+        }),
+      },
+      user: {
+        connect: {
+          id: userId,
+        },
+      },
+    },
+  });
+  return { success: true };
 }
 
 export async function likePost(userId: string, postId: string) {

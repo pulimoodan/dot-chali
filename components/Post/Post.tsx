@@ -101,10 +101,10 @@ function Post({ post, currentUserId }: Props) {
     setData({
       ...tempData,
       voted: unVoting ? undefined : vote,
-      votes: unVoting ? tempData.votes : tempData.votes + 1,
+      votes: unVoting ? tempData.votes : Number(tempData.votes) + 1,
       popularity: unVoting
         ? tempData.popularity
-        : tempData.popularity + votePoints[vote],
+        : Number(tempData.popularity) + votePoints[vote],
     });
 
     setVoting("");
@@ -248,10 +248,10 @@ function Post({ post, currentUserId }: Props) {
         <LegacyStack vertical spacing="baseTight">
           <LegacyStack alignment="center" distribution="equalSpacing">
             <Text as="p" color="subdued">
-              {data.popularity.toString()} Popularity
+              {data.popularity?.toString()} Popularity
             </Text>
             <Text as="p" color="subdued">
-              {data.votes.toString()} Vote{data.votes > 1 ? "s" : ""}
+              {data.votes?.toString()} Vote{data.votes > 1 ? "s" : ""}
             </Text>
           </LegacyStack>
           <ProgressBar

@@ -12,10 +12,9 @@ import { useEffect, useState } from "react";
 import { useUserContext } from "@/components/hooks/userContext";
 import HomePageSkeleton from "@/components/skeletons/HomePageSkeleton";
 import { BigPostEntity } from "@/lib/entities/Post";
-import { loadCommentsForPost, loadPostForUser } from "@/app/posts";
+import { loadPostForUser } from "@/app/posts";
 import PostAlone from "@/components/Post/PostAlone";
 import TopBarPost from "@/components/TopBar/TopBarPost";
-import CommentEntity from "@/lib/entities/Comment";
 import Comments from "@/components/Post/Comments";
 
 interface Params {
