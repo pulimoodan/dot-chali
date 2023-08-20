@@ -11,7 +11,7 @@ export async function loadPostsForUser(currentUserId: string) {
     "Post"."content",
     "Post"."createdAt",
     "Post"."updatedAt",
-    JSON_AGG(JSON_BUILD_OBJECT('name', "Tag"."name", 'color', "Tag"."color") ) AS tags,
+    JSON_AGG(JSON_BUILD_OBJECT('name', "Tag"."name", 'color', "Tag"."color")) FILTER (WHERE "Tag"."name" IS NOT NULL) AS tags,
     JSON_BUILD_OBJECT('id', "User"."id", 'firstName', "User"."firstName", 'lastName', "User"."lastName", 'userName', "User"."userName", 'profilePic', "User"."profilePic", 'following', EXISTS(SELECT * FROM "Follow" JOIN "User" ON "User"."id" = "Follow"."userId" AND "Post"."userId" = "Follow"."creatorId" WHERE "User"."id" = ${currentUserId})) AS user,
     (SELECT COUNT(*) FROM "Vote" WHERE "Vote"."postId" = "Post"."id") AS votes,
     (SELECT
@@ -22,9 +22,9 @@ export async function loadPostsForUser(currentUserId: string) {
     (SELECT "Vote"."voteType" FROM "Vote" WHERE "Vote"."postId" = "Post"."id" AND "Vote"."userId" = ${currentUserId}) AS voted,
     EXISTS(SELECT * FROM "Like" JOIN "User" ON "User"."id" = "Like"."userId" AND "Like"."postId" = "Post"."id" WHERE "User"."id" = ${currentUserId}) AS liked
     FROM "Post"
-    INNER JOIN "User" ON "Post"."userId" = "User"."id"
-    INNER JOIN "_PostToTag" ON "Post"."id" = "_PostToTag"."A"
-    INNER JOIN "Tag" ON "Tag"."id" = "_PostToTag"."B"
+    LEFT JOIN "User" ON "Post"."userId" = "User"."id"
+    LEFT JOIN "_PostToTag" ON "Post"."id" = "_PostToTag"."A"
+    LEFT JOIN "Tag" ON "Tag"."id" = "_PostToTag"."B"
     GROUP BY "Post"."id", "User"."id"
     ORDER BY "Post"."createdAt" DESC
   `;
