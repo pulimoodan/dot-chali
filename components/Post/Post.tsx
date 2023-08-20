@@ -1,5 +1,9 @@
 import { BigPostEntity } from "@/lib/entities/Post";
-import { convertTimeToSince } from "@/lib/general";
+import {
+  convertTimeToSince,
+  copyToClipboard,
+  shortenContent,
+} from "@/lib/general";
 import {
   ActionList,
   Avatar,
@@ -26,12 +30,14 @@ import {
   SmileyHappyMajor,
   ShareIosMinor,
   ClipboardMinor,
+  ArrowUpMinor,
 } from "@shopify/polaris-icons";
 import { useState } from "react";
 import { Status } from "@shopify/polaris/build/ts/src/components/Badge";
 import { likePost, unLikePost, unVotePost, votePost } from "@/app/posts";
 import { VoteType } from "@prisma/client";
 import { followUser, unFollowUser } from "@/app/user";
+import { useUIContext } from "../hooks/uiContext";
 
 interface Props {
   post: BigPostEntity;
@@ -46,11 +52,16 @@ const votePoints = {
 };
 
 function Post({ post, currentUserId }: Props) {
+  const { toast } = useUIContext();
+
   const [data, setData] = useState<BigPostEntity>(post);
   const [moreActions, setMoreActions] = useState(false);
   const [liking, setLiking] = useState(false);
   const [voting, setVoting] = useState("");
   const [following, setFollowing] = useState(false);
+  const [readMore, setReadMore] = useState(false);
+
+  const maxLines = 7;
 
   const handleLikePost = async () => {
     setLiking(true);
@@ -113,6 +124,18 @@ function Post({ post, currentUserId }: Props) {
     setFollowing(false);
   };
 
+  const handleShare = () => {
+    copyToClipboard(`/post/${data.id}`);
+    setMoreActions(false);
+    toast.show("Link copied to clipboard");
+  };
+
+  const handleCopyContent = () => {
+    copyToClipboard(data.content);
+    setMoreActions(false);
+    toast.show("Content copied to clipboard");
+  };
+
   return (
     <LegacyCard>
       <LegacyCard.Section>
@@ -163,8 +186,16 @@ function Post({ post, currentUserId }: Props) {
             >
               <ActionList
                 items={[
-                  { content: "Share", icon: ShareIosMinor },
-                  { content: "Copy", icon: ClipboardMinor },
+                  {
+                    content: "Share",
+                    icon: ShareIosMinor,
+                    onAction: handleShare,
+                  },
+                  {
+                    content: "Copy",
+                    icon: ClipboardMinor,
+                    onAction: handleCopyContent,
+                  },
                 ]}
               />
             </Popover>
@@ -174,11 +205,31 @@ function Post({ post, currentUserId }: Props) {
       <LegacyCard.Section subdued>
         <LegacyStack vertical spacing="baseTight">
           <Text as="p">
-            <div dangerouslySetInnerHTML={{ __html: data.content }}></div>
+            <div style={{ whiteSpace: "pre-line" }}>
+              {(readMore
+                ? data.content
+                : shortenContent(data.content, maxLines)
+              )
+                .split("\\n")
+                .map(function (item, idx) {
+                  return (
+                    <span key={idx}>
+                      {item}
+                      <br />
+                    </span>
+                  );
+                })}
+            </div>
           </Text>
-          <Button icon={ArrowDownMinor} plain>
-            Read more
-          </Button>
+          {data.content.split("\\n").length > maxLines && (
+            <Button
+              icon={readMore ? ArrowUpMinor : ArrowDownMinor}
+              plain
+              onClick={() => setReadMore((state) => !state)}
+            >
+              {readMore ? "Read less" : "Read more"}
+            </Button>
+          )}
           <LegacyStack alignment="center" spacing="tight">
             {data.tags &&
               data.tags.map((tag) => (

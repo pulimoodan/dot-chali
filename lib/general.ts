@@ -25,3 +25,26 @@ export function convertTimeToSince(date: Date) {
   }
   return Math.floor(seconds) + " Seconds ago";
 }
+
+export function shortenContent(inputString: string, lineCount: number) {
+  const lines = inputString.split("\\n");
+  if (lines.length <= lineCount) {
+    return inputString;
+  }
+
+  const shortenedLines = lines.slice(0, lineCount);
+  return shortenedLines.join("\n");
+}
+
+export async function copyToClipboard(content: string) {
+  const el = document.createElement("textarea");
+  el.value = content;
+  el.setAttribute("readonly", "");
+  el.style.position = "absolute";
+  el.style.left = "-9999px";
+  document.body.appendChild(el);
+  el.select();
+  el.setSelectionRange(0, 99999);
+  document.execCommand("copy");
+  document.body.removeChild(el);
+}

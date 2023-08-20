@@ -3,9 +3,9 @@ import "./globals.css";
 import type { Metadata } from "next";
 import "@shopify/polaris/build/esm/styles.css";
 import enTranslations from "@shopify/polaris/locales/en.json";
-import { AppProvider } from "@shopify/polaris";
-import { useEffect } from "react";
+import { AppProvider, Frame } from "@shopify/polaris";
 import UserContextProvider from "@/components/providers/UserContextProvider";
+import UIContextProvider from "@/components/providers/UIContextProvider";
 
 export const metadata: Metadata = {
   title: "The Chali App",
@@ -21,7 +21,11 @@ export default function RootLayout({
     <html lang="en">
       <body>
         <AppProvider i18n={enTranslations}>
-          <UserContextProvider>{children}</UserContextProvider>
+          <Frame>
+            <UserContextProvider>
+              <UIContextProvider>{children}</UIContextProvider>
+            </UserContextProvider>
+          </Frame>
         </AppProvider>
       </body>
     </html>

@@ -5,13 +5,13 @@ import { Layout, Page, Spinner } from "@shopify/polaris";
 import Navigation from "@/components/Navigation/Navigation";
 import TopBar from "@/components/TopBar/TopBar";
 import { useEffect, useContext, useState } from "react";
-import { UserContext } from "@/components/hooks/userContext";
+import { useUserContext } from "@/components/hooks/userContext";
 import HomePageSkeleton from "@/components/skeletons/HomePageSkeleton";
 import { loadPostsForUser } from "./posts";
 import { BigPostEntity } from "@/lib/entities/Post";
 
 export default function Home() {
-  const { user, loaded } = useContext(UserContext);
+  const { user, loaded } = useUserContext();
   const [posts, setPosts] = useState<BigPostEntity[]>();
   const [fetchingPosts, setFetchingPosts] = useState(false);
 

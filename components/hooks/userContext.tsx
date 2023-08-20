@@ -1,6 +1,6 @@
 "use client";
 import UserEntity from "@/lib/entities/User";
-import { createContext } from "react";
+import { createContext, useContext } from "react";
 
 export interface DataEntity {
   loaded: boolean;
@@ -18,3 +18,5 @@ export const UserContext = createContext<DataEntity>({
     id: "",
   },
 });
+
+export const useUserContext = () => useContext(UserContext);
