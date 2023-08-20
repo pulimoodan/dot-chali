@@ -51,7 +51,7 @@ const votePoints = {
   bad: -1,
 };
 
-function Post({ post, currentUserId }: Props) {
+function PostAlone({ post, currentUserId }: Props) {
   const { toast } = useUIContext();
 
   const [data, setData] = useState<BigPostEntity>(post);
@@ -162,13 +162,6 @@ function Post({ post, currentUserId }: Props) {
           </LegacyStack>
 
           <LegacyStack alignment="center">
-            <Button
-              size="slim"
-              icon={ConversationMinor}
-              url={`/post/${data.id}`}
-            >
-              {data.comments.toString()} Comment{data.comments > 1 ? "s" : ""}
-            </Button>
             <Button
               size="slim"
               onClick={data.liked ? handleUnLikePost : handleLikePost}
@@ -293,4 +286,4 @@ function Post({ post, currentUserId }: Props) {
   );
 }
 
-export default Post;
+export default PostAlone;

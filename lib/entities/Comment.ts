@@ -1,11 +1,13 @@
-import PostEntity from "./Post";
-import UserEntity from "./User";
-
 export default interface CommentEntity {
   id: string;
   content: string;
-  user?: UserEntity;
-  post?: PostEntity;
   createdAt: Date;
   updatedAt: Date;
+  user: {
+    id: string;
+    firstName: string;
+    lastName: string;
+    userName: string;
+    profilePic: string | null;
+  };
 }

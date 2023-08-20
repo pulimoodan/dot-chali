@@ -1,7 +1,7 @@
 "use client";
 
 import Post from "@/components/Post/Post";
-import { Layout, Page, Spinner } from "@shopify/polaris";
+import { Layout, LegacyStack, Page, Spinner } from "@shopify/polaris";
 import Navigation from "@/components/Navigation/Navigation";
 import TopBar from "@/components/TopBar/TopBar";
 import { useEffect, useContext, useState } from "react";
@@ -36,7 +36,11 @@ export default function Home() {
         <Navigation user={user} />
         <Layout.Section>
           <div style={{ marginTop: "3.5rem" }}>
-            {fetchingPosts && <Spinner />}
+            {fetchingPosts && (
+              <LegacyStack alignment="center" distribution="center">
+                <Spinner />
+              </LegacyStack>
+            )}
             {posts?.map((post) => (
               <Post post={post} currentUserId={user.id} />
             ))}
