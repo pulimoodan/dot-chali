@@ -1,10 +1,17 @@
 "use client";
 
 import Post from "@/components/Post/Post";
-import { Layout, LegacyStack, Page, Spinner } from "@shopify/polaris";
+import {
+  Layout,
+  LegacyCard,
+  LegacyStack,
+  Page,
+  Spinner,
+  Text,
+} from "@shopify/polaris";
 import Navigation from "@/components/Navigation/Navigation";
 import TopBar from "@/components/TopBar/TopBar";
-import { useEffect, useContext, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useUserContext } from "@/components/hooks/userContext";
 import HomePageSkeleton from "@/components/skeletons/HomePageSkeleton";
 import { loadPostsForUser } from "./posts";
@@ -12,20 +19,41 @@ import { BigPostEntity } from "@/lib/entities/Post";
 
 export default function Home() {
   const { user, loaded } = useUserContext();
-  const [posts, setPosts] = useState<BigPostEntity[]>();
+  const [posts, setPosts] = useState<BigPostEntity[]>([]);
   const [fetchingPosts, setFetchingPosts] = useState(false);
+  const [end, setEnd] = useState(false);
+  let [page, setPage] = useState(-1);
+  const loadElem = useRef<HTMLDivElement>(null);
 
   const fetchPosts = async () => {
     setFetchingPosts(true);
-    const data = await loadPostsForUser(user.id);
-    setPosts(data);
-    console.log(posts);
+    const data = await loadPostsForUser(user.id, page);
+    if (data.length == 0) setEnd(true);
+    setPosts((state) => [...state, ...data]);
     setFetchingPosts(false);
   };
 
   useEffect(() => {
-    if (loaded) fetchPosts();
+    if (page != -1) fetchPosts();
+  }, [page]);
+
+  useEffect(() => {
+    if (loaded) setPage((state) => ++state);
   }, [loaded]);
+
+  useEffect(() => {
+    window.addEventListener("scroll", async () => {
+      if (!loadElem.current) return;
+
+      const elemRect = loadElem.current.getBoundingClientRect();
+      const viewHeight = Math.max(window.innerHeight);
+      const scrolledIntoView = !(
+        elemRect.bottom < 0 || elemRect.top - viewHeight >= 0
+      );
+
+      if (scrolledIntoView) setPage((state) => ++state);
+    });
+  }, []);
 
   if (!loaded) return <HomePageSkeleton />;
 
@@ -36,14 +64,28 @@ export default function Home() {
         <Navigation user={user} />
         <Layout.Section>
           <div style={{ marginTop: "3.5rem" }}>
-            {fetchingPosts && (
-              <LegacyStack alignment="center" distribution="center">
-                <Spinner />
-              </LegacyStack>
-            )}
             {posts?.map((post) => (
               <Post post={post} currentUserId={user.id} />
             ))}
+
+            {!fetchingPosts && !end && <div ref={loadElem}></div>}
+
+            {fetchingPosts && (
+              <LegacyCard sectioned>
+                <LegacyStack alignment="center" distribution="center">
+                  <Spinner />
+                </LegacyStack>
+              </LegacyCard>
+            )}
+            {end && (
+              <LegacyCard sectioned>
+                <LegacyStack alignment="center" distribution="center">
+                  <Text as="p" color="subdued">
+                    That's all.
+                  </Text>
+                </LegacyStack>
+              </LegacyCard>
+            )}
           </div>
         </Layout.Section>
       </Layout>

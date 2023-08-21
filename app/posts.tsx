@@ -4,7 +4,9 @@ import { BigPostEntity } from "@/lib/entities/Post";
 import { TagEntity } from "@/lib/entities/Tag";
 import { VoteType } from "@/lib/entities/Vote";
 
-export async function loadPostsForUser(currentUserId: string) {
+export async function loadPostsForUser(currentUserId: string, page: number) {
+  const limit = 10;
+
   const rawPosts = await prisma.$queryRaw<BigPostEntity[]>`
     SELECT 
     "Post"."id",
@@ -27,11 +29,15 @@ export async function loadPostsForUser(currentUserId: string) {
     LEFT JOIN "Tag" ON "Tag"."id" = "_PostToTag"."B"
     GROUP BY "Post"."id", "User"."id"
     ORDER BY "Post"."createdAt" DESC
+    OFFSET ${page * limit} ROWS
+    FETCH NEXT ${limit} ROWS ONLY
   `;
   return rawPosts;
 }
 
-export async function loadPostsOfUser(currentUserId: string) {
+export async function loadPostsOfUser(currentUserId: string, page: number) {
+  const limit = 10;
+
   const rawPosts = await prisma.$queryRaw<BigPostEntity[]>`
     SELECT 
     "Post"."id",
@@ -55,6 +61,8 @@ export async function loadPostsOfUser(currentUserId: string) {
     WHERE "Post"."userId" = ${currentUserId}
     GROUP BY "Post"."id", "User"."id"
     ORDER BY "Post"."createdAt" DESC
+    OFFSET ${page * limit} ROWS
+    FETCH NEXT ${limit} ROWS ONLY
   `;
   return rawPosts;
 }

@@ -59,6 +59,9 @@ export default function CreatePage() {
     followers: 0,
     popularity: 0,
   });
+  const [end, setEnd] = useState(false);
+  let [page, setPage] = useState(-1);
+  const loadElem = useRef<HTMLDivElement>(null);
 
   const handleSaveUserDetails = async (
     userName: string,
@@ -86,8 +89,9 @@ export default function CreatePage() {
 
   const fetchUserPosts = async () => {
     setFetchingPosts(true);
-    const data = await loadPostsOfUser(user.id);
-    setPosts(data);
+    const data = await loadPostsOfUser(user.id, page);
+    if (data.length == 0) setEnd(true);
+    setPosts((state) => [...state, ...data]);
     setFetchingPosts(false);
   };
 
@@ -114,15 +118,33 @@ export default function CreatePage() {
   };
 
   useEffect(() => {
+    if (page != -1) fetchUserPosts();
+  }, [page]);
+
+  useEffect(() => {
     if (loaded) {
+      setPage((state) => ++state);
       fetchUserStats();
-      fetchUserPosts();
       setProfilePic(user.profilePic || "");
       setFirstName(user.firstName);
       setLastName(user.lastName);
       setUserName(user.userName);
     }
   }, [loaded]);
+
+  useEffect(() => {
+    window.addEventListener("scroll", async () => {
+      if (!loadElem.current) return;
+
+      const elemRect = loadElem.current.getBoundingClientRect();
+      const viewHeight = Math.max(window.innerHeight);
+      const scrolledIntoView = !(
+        elemRect.bottom < 0 || elemRect.top - viewHeight >= 0
+      );
+
+      if (scrolledIntoView) setPage((state) => ++state);
+    });
+  }, []);
 
   if (!loaded) return <HomePageSkeleton />;
 
@@ -248,6 +270,12 @@ export default function CreatePage() {
               </Text>
             </Layout.Section>
             <Layout.Section>
+              {posts?.map((post) => (
+                <Post post={post} currentUserId={user.id} />
+              ))}
+
+              {!fetchingPosts && !end && <div ref={loadElem}></div>}
+
               {fetchingPosts && (
                 <LegacyCard sectioned>
                   <LegacyStack alignment="center" distribution="center">
@@ -255,10 +283,6 @@ export default function CreatePage() {
                   </LegacyStack>
                 </LegacyCard>
               )}
-              {!fetchingPosts &&
-                posts?.map((post) => (
-                  <Post post={post} currentUserId={user.id} />
-                ))}
             </Layout.Section>
           </Layout>
         </Layout.Section>
