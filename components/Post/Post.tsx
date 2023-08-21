@@ -31,10 +31,17 @@ import {
   ShareIosMinor,
   ClipboardMinor,
   ArrowUpMinor,
+  DeleteMinor,
 } from "@shopify/polaris-icons";
 import { useState } from "react";
 import { Status } from "@shopify/polaris/build/ts/src/components/Badge";
-import { likePost, unLikePost, unVotePost, votePost } from "@/app/posts";
+import {
+  deletePost,
+  likePost,
+  unLikePost,
+  unVotePost,
+  votePost,
+} from "@/app/posts";
 import { VoteType } from "@prisma/client";
 import { followUser, unFollowUser } from "@/app/user";
 import { useUIContext } from "../hooks/uiContext";
@@ -60,8 +67,18 @@ function Post({ post, currentUserId }: Props) {
   const [voting, setVoting] = useState("");
   const [following, setFollowing] = useState(false);
   const [readMore, setReadMore] = useState(false);
+  const [deleted, setDeleted] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   const maxLines = 7;
+
+  const handleDelete = async () => {
+    setDeleting(true);
+    await deletePost(data.id);
+    setDeleted(true);
+    toast.show("Post deleted");
+    setDeleting(false);
+  };
 
   const handleLikePost = async () => {
     setLiking(true);
@@ -136,6 +153,31 @@ function Post({ post, currentUserId }: Props) {
     toast.show("Content copied to clipboard");
   };
 
+  const moreActionItems = [
+    {
+      content: "Share",
+      icon: ShareIosMinor,
+      onAction: handleShare,
+      disabled: false,
+    },
+    {
+      content: "Copy",
+      icon: ClipboardMinor,
+      onAction: handleCopyContent,
+      disabled: false,
+    },
+  ];
+
+  if (data.user.id == currentUserId)
+    moreActionItems.push({
+      content: "Delete",
+      icon: DeleteMinor,
+      onAction: handleDelete,
+      disabled: deleting,
+    });
+
+  if (deleted) return;
+
   return (
     <LegacyCard>
       <LegacyCard.Section>
@@ -144,15 +186,22 @@ function Post({ post, currentUserId }: Props) {
             <Avatar customer size="medium" />
             <LegacyStack vertical spacing="extraTight">
               <Text as="h4" variant="headingSm">
-                {data.user.firstName} {data.user.lastName} &#x2022;{" "}
-                <Button
-                  plain
-                  loading={following}
-                  size="micro"
-                  onClick={data.user.following ? handleUnFollow : handleFollow}
-                >
-                  {data.user.following ? "Following" : "Follow"}
-                </Button>
+                {data.user.firstName} {data.user.lastName}
+                {data.user.id != currentUserId && (
+                  <>
+                    &#x2022;{" "}
+                    <Button
+                      plain
+                      loading={following}
+                      size="micro"
+                      onClick={
+                        data.user.following ? handleUnFollow : handleFollow
+                      }
+                    >
+                      {data.user.following ? "Following" : "Follow"}
+                    </Button>
+                  </>
+                )}
               </Text>
               <Text as="p" variant="bodySm">
                 @{data.user.userName} &#x2022;{" "}
@@ -188,20 +237,7 @@ function Post({ post, currentUserId }: Props) {
                 />
               }
             >
-              <ActionList
-                items={[
-                  {
-                    content: "Share",
-                    icon: ShareIosMinor,
-                    onAction: handleShare,
-                  },
-                  {
-                    content: "Copy",
-                    icon: ClipboardMinor,
-                    onAction: handleCopyContent,
-                  },
-                ]}
-              />
+              <ActionList items={moreActionItems} />
             </Popover>
           </LegacyStack>
         </LegacyStack>

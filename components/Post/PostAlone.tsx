@@ -31,13 +31,21 @@ import {
   ShareIosMinor,
   ClipboardMinor,
   ArrowUpMinor,
+  DeleteMinor,
 } from "@shopify/polaris-icons";
 import { useState } from "react";
 import { Status } from "@shopify/polaris/build/ts/src/components/Badge";
-import { likePost, unLikePost, unVotePost, votePost } from "@/app/posts";
+import {
+  deletePost,
+  likePost,
+  unLikePost,
+  unVotePost,
+  votePost,
+} from "@/app/posts";
 import { VoteType } from "@prisma/client";
 import { followUser, unFollowUser } from "@/app/user";
 import { useUIContext } from "../hooks/uiContext";
+import { useRouter } from "next/navigation";
 
 interface Props {
   post: BigPostEntity;
@@ -53,12 +61,14 @@ const votePoints = {
 
 function PostAlone({ post, currentUserId }: Props) {
   const { toast } = useUIContext();
+  const router = useRouter();
 
   const [data, setData] = useState<BigPostEntity>(post);
   const [moreActions, setMoreActions] = useState(false);
   const [liking, setLiking] = useState(false);
   const [voting, setVoting] = useState("");
   const [following, setFollowing] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const [readMore, setReadMore] = useState(false);
 
   const maxLines = 7;
@@ -110,6 +120,14 @@ function PostAlone({ post, currentUserId }: Props) {
     setVoting("");
   };
 
+  const handleDelete = async () => {
+    setDeleting(true);
+    await deletePost(data.id);
+    toast.show("Post deleted");
+    setDeleting(false);
+    router.push("/");
+  };
+
   const handleFollow = async () => {
     setFollowing(true);
     await followUser(post.user.id, currentUserId);
@@ -135,6 +153,29 @@ function PostAlone({ post, currentUserId }: Props) {
     setMoreActions(false);
     toast.show("Content copied to clipboard");
   };
+
+  const moreActionItems = [
+    {
+      content: "Share",
+      icon: ShareIosMinor,
+      onAction: handleShare,
+      disabled: false,
+    },
+    {
+      content: "Copy",
+      icon: ClipboardMinor,
+      onAction: handleCopyContent,
+      disabled: false,
+    },
+  ];
+
+  if (data.user.id == currentUserId)
+    moreActionItems.push({
+      content: "Delete",
+      icon: DeleteMinor,
+      onAction: handleDelete,
+      disabled: deleting,
+    });
 
   return (
     <LegacyCard>
@@ -181,20 +222,7 @@ function PostAlone({ post, currentUserId }: Props) {
                 />
               }
             >
-              <ActionList
-                items={[
-                  {
-                    content: "Share",
-                    icon: ShareIosMinor,
-                    onAction: handleShare,
-                  },
-                  {
-                    content: "Copy",
-                    icon: ClipboardMinor,
-                    onAction: handleCopyContent,
-                  },
-                ]}
-              />
+              <ActionList items={moreActionItems} />
             </Popover>
           </LegacyStack>
         </LegacyStack>
@@ -241,7 +269,7 @@ function PostAlone({ post, currentUserId }: Props) {
         <LegacyStack vertical spacing="baseTight">
           <LegacyStack alignment="center" distribution="equalSpacing">
             <Text as="p" color="subdued">
-              {data.popularity.toString()} Popularity
+              {data.popularity?.toString()} Popularity
             </Text>
             <Text as="p" color="subdued">
               {data.votes.toString()} Vote{data.votes > 1 ? "s" : ""}

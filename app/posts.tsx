@@ -31,14 +31,14 @@ export async function loadPostsForUser(currentUserId: string) {
   return rawPosts;
 }
 
-export async function loadPostForUser(postId: string, currentUserId: string) {
+export async function loadPostsOfUser(currentUserId: string) {
   const rawPosts = await prisma.$queryRaw<BigPostEntity[]>`
     SELECT 
     "Post"."id",
     "Post"."content",
     "Post"."createdAt",
     "Post"."updatedAt",
-    JSON_AGG(JSON_BUILD_OBJECT('name', "Tag"."name", 'color', "Tag"."color") ) AS tags,
+    JSON_AGG(JSON_BUILD_OBJECT('name', "Tag"."name", 'color', "Tag"."color")) FILTER (WHERE "Tag"."name" IS NOT NULL) AS tags,
     JSON_BUILD_OBJECT('id', "User"."id", 'firstName', "User"."firstName", 'lastName', "User"."lastName", 'userName', "User"."userName", 'profilePic', "User"."profilePic", 'following', EXISTS(SELECT * FROM "Follow" JOIN "User" ON "User"."id" = "Follow"."userId" AND "Post"."userId" = "Follow"."creatorId" WHERE "User"."id" = ${currentUserId})) AS user,
     (SELECT COUNT(*) FROM "Vote" WHERE "Vote"."postId" = "Post"."id") AS votes,
     (SELECT
@@ -49,9 +49,37 @@ export async function loadPostForUser(postId: string, currentUserId: string) {
     (SELECT "Vote"."voteType" FROM "Vote" WHERE "Vote"."postId" = "Post"."id" AND "Vote"."userId" = ${currentUserId}) AS voted,
     EXISTS(SELECT * FROM "Like" JOIN "User" ON "User"."id" = "Like"."userId" AND "Like"."postId" = "Post"."id" WHERE "User"."id" = ${currentUserId}) AS liked
     FROM "Post"
-    INNER JOIN "User" ON "Post"."userId" = "User"."id"
-    INNER JOIN "_PostToTag" ON "Post"."id" = "_PostToTag"."A"
-    INNER JOIN "Tag" ON "Tag"."id" = "_PostToTag"."B"
+    LEFT JOIN "User" ON "Post"."userId" = "User"."id"
+    LEFT JOIN "_PostToTag" ON "Post"."id" = "_PostToTag"."A"
+    LEFT JOIN "Tag" ON "Tag"."id" = "_PostToTag"."B"
+    WHERE "Post"."userId" = ${currentUserId}
+    GROUP BY "Post"."id", "User"."id"
+    ORDER BY "Post"."createdAt" DESC
+  `;
+  return rawPosts;
+}
+
+export async function loadPostForUser(postId: string, currentUserId: string) {
+  const rawPosts = await prisma.$queryRaw<BigPostEntity[]>`
+    SELECT 
+    "Post"."id",
+    "Post"."content",
+    "Post"."createdAt",
+    "Post"."updatedAt",
+    JSON_AGG(JSON_BUILD_OBJECT('name', "Tag"."name", 'color', "Tag"."color")) FILTER (WHERE "Tag"."name" IS NOT NULL) AS tags,
+    JSON_BUILD_OBJECT('id', "User"."id", 'firstName', "User"."firstName", 'lastName', "User"."lastName", 'userName', "User"."userName", 'profilePic', "User"."profilePic", 'following', EXISTS(SELECT * FROM "Follow" JOIN "User" ON "User"."id" = "Follow"."userId" AND "Post"."userId" = "Follow"."creatorId" WHERE "User"."id" = ${currentUserId})) AS user,
+    (SELECT COUNT(*) FROM "Vote" WHERE "Vote"."postId" = "Post"."id") AS votes,
+    (SELECT
+      SUM(CASE WHEN "Vote"."voteType" = 'great' THEN 2 WHEN "Vote"."voteType" = 'good' THEN 1 WHEN "Vote"."voteType" = 'ok' THEN 0 WHEN "Vote"."voteType" = 'bad' THEN -1 END)
+      FROM "Vote" WHERE "Vote"."postId" = "Post"."id"
+    ) AS popularity,
+    (SELECT COUNT(*) FROM "Comment" WHERE "Comment"."postId" = "Post"."id") AS comments,
+    (SELECT "Vote"."voteType" FROM "Vote" WHERE "Vote"."postId" = "Post"."id" AND "Vote"."userId" = ${currentUserId}) AS voted,
+    EXISTS(SELECT * FROM "Like" JOIN "User" ON "User"."id" = "Like"."userId" AND "Like"."postId" = "Post"."id" WHERE "User"."id" = ${currentUserId}) AS liked
+    FROM "Post"
+    LEFT JOIN "User" ON "Post"."userId" = "User"."id"
+    LEFT JOIN "_PostToTag" ON "Post"."id" = "_PostToTag"."A"
+    LEFT JOIN "Tag" ON "Tag"."id" = "_PostToTag"."B"
     WHERE "Post"."id" = ${postId}
     GROUP BY "Post"."id", "User"."id"
   `;
@@ -101,6 +129,15 @@ export async function deleteComment(commentId: string) {
   await prisma.comment.delete({
     where: {
       id: commentId,
+    },
+  });
+  return { success: true };
+}
+
+export async function deletePost(postId: string) {
+  await prisma.post.delete({
+    where: {
+      id: postId,
     },
   });
   return { success: true };

@@ -27,6 +27,7 @@ import {
   LogOutMinor,
   PopularMajor,
 } from "@shopify/polaris-icons";
+import { usePathname } from "next/navigation";
 import { useState, useEffect, useRef } from "react";
 
 interface Props {
@@ -41,6 +42,7 @@ interface Props {
 }
 
 function Navigation({ user }: Props) {
+  const pathname = usePathname();
   const [width, setWidth] = useState(0);
   const [moreActions, setMoreActions] = useState(false);
   const elem = useRef(null);
@@ -83,21 +85,28 @@ function Navigation({ user }: Props) {
                   actionRole="menuitem"
                   items={[
                     {
-                      active: true,
+                      active: pathname == "/",
                       content: "Home",
                       icon: HomeMinor,
+                      url: "/",
                     },
                     {
+                      active: pathname == "/trending",
                       content: "Trending",
                       icon: PopularMajor,
+                      url: "/trending",
                     },
                     {
+                      active: pathname == "/explore",
                       content: "Explore",
                       icon: SearchMinor,
+                      url: "/explore",
                     },
                     {
+                      active: pathname == "/favourites",
                       content: "Favourites",
                       icon: StarOutlineMinor,
+                      url: "/favourites",
                     },
                   ]}
                 />
@@ -109,34 +118,47 @@ function Navigation({ user }: Props) {
                   actionRole="menuitem"
                   items={[
                     {
+                      active: pathname == "/cat",
                       content: "Chat",
                       icon: ConversationMinor,
+                      url: "/chat",
                     },
                     {
+                      active: pathname == "/notifications",
                       content: "Notifications",
                       icon: NotificationMajor,
+                      url: "/notifications",
                     },
                   ]}
                 />
               </LegacyCard>
             </Layout.Section>
             <Layout.Section>
-              <Card padding="4">
+              <Card
+                padding="4"
+                background={
+                  pathname == "/profile"
+                    ? "bg-warning-subdued-experimental"
+                    : "bg"
+                }
+              >
                 <LegacyStack alignment="center" distribution="equalSpacing">
-                  <LegacyStack alignment="center">
-                    <Avatar
-                      size="medium"
-                      source={user.profilePic ? user.profilePic : ""}
-                    />
-                    <LegacyStack vertical spacing="extraTight">
-                      <Text as="h4" variant="headingSm">
-                        {user?.firstName} {user?.lastName}
-                      </Text>
-                      <Badge icon={MentionMajor} size="small" status="info">
-                        {user?.userName}
-                      </Badge>
+                  <Link url="/profile" removeUnderline>
+                    <LegacyStack alignment="center">
+                      <Avatar
+                        size="medium"
+                        source={user.profilePic ? user.profilePic : ""}
+                      />
+                      <LegacyStack vertical spacing="extraTight">
+                        <Text as="h4" variant="headingSm">
+                          {user?.firstName} {user?.lastName}
+                        </Text>
+                        <Badge icon={MentionMajor} size="small" status="info">
+                          {user?.userName}
+                        </Badge>
+                      </LegacyStack>
                     </LegacyStack>
-                  </LegacyStack>
+                  </Link>
                   <Popover
                     active={moreActions}
                     onClose={() => setMoreActions(false)}
