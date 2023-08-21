@@ -14,7 +14,7 @@ import TopBar from "@/components/TopBar/TopBar";
 import { useEffect, useState, useRef } from "react";
 import { useUserContext } from "@/components/hooks/userContext";
 import HomePageSkeleton from "@/components/skeletons/HomePageSkeleton";
-import { loadPostsForUser } from "./posts";
+import { loadFollowingPostsForUser } from "../posts";
 import { BigPostEntity } from "@/lib/entities/Post";
 
 export default function Home() {
@@ -27,7 +27,7 @@ export default function Home() {
 
   const fetchPosts = async () => {
     setFetchingPosts(true);
-    const data = await loadPostsForUser(user.id, page);
+    const data = await loadFollowingPostsForUser(user.id, page);
     if (data.length == 0) setEnd(true);
     setPosts((state) => [...state, ...data]);
     setFetchingPosts(false);
@@ -60,7 +60,7 @@ export default function Home() {
   return (
     <Page>
       <Layout>
-        <TopBar active={0} />
+        <TopBar active={1} />
         <Navigation user={user} />
         <Layout.Section>
           <div style={{ marginTop: "3.5rem" }}>

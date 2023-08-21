@@ -9,7 +9,11 @@ import {
 import { SmileyJoyMajor } from "@shopify/polaris-icons";
 import styles from "./topbar.module.css";
 
-function TopBar() {
+interface Props {
+  active: number;
+}
+
+function TopBar({ active }: Props) {
   return (
     <Layout.Section fullWidth>
       <div
@@ -47,10 +51,10 @@ function TopBar() {
             </Layout.Section>
             <Layout.Section>
               <LegacyTabs
-                selected={0}
+                selected={active}
                 tabs={[
-                  { content: "Latest", id: "for-you" },
-                  { content: "Following", id: "following" },
+                  { content: "Latest", id: "for-you", url: "/" },
+                  { content: "Following", id: "following", url: "/following" },
                 ]}
               />
             </Layout.Section>

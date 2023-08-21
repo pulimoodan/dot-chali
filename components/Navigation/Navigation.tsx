@@ -85,7 +85,7 @@ function Navigation({ user }: Props) {
                   actionRole="menuitem"
                   items={[
                     {
-                      active: pathname == "/",
+                      active: pathname == "/" || pathname == "/following",
                       content: "Home",
                       icon: HomeMinor,
                       url: "/",
